@@ -612,5 +612,3 @@ Desenvolvido como parte do desafio técnico para vaga de QA Automation.
 Este projeto é privado e foi desenvolvido exclusivamente para fins de avaliação técnica.
 
 ---
-
-**Desafio concluído com sucesso! ✅**
