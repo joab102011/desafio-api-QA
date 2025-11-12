@@ -307,7 +307,13 @@ npx cypress run --spec "cypress/e2e/api/carrinhos.cy.js"
 - Comentários no código explicando cada cenário
 - Documentação de todos os cenários levantados
 
-### 8. Boas Práticas de Teste
+### 8. Estrutura BDD (Behavior-Driven Development)
+- Implementação do padrão Given-When-Then (Dado-Quando-Então) em todos os testes
+- Uso de `cy.step()` para documentar cada etapa do cenário de teste
+- Melhora a rastreabilidade e legibilidade dos testes
+- Facilita a comunicação entre equipes técnicas e de negócio
+
+### 9. Boas Práticas de Teste
 - Testes independentes (cada teste pode rodar isoladamente)
 - Setup e teardown adequados
 - Uso de hooks (before, after) quando necessário
