@@ -7,6 +7,9 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
+// Importa o plugin Allure
+import '@shelex/cypress-allure-plugin'
+
 // Importa os comandos customizados
 import './commands'
 

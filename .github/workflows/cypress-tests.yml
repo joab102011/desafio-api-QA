@@ -42,6 +42,18 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Gerar relatório Allure
+        if: always()
+        run: npm run allure:generate
+      
+      - name: Upload relatório Allure
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 7
+      
       - name: Upload screenshots em caso de falha
         uses: actions/upload-artifact@v4
         if: failure()

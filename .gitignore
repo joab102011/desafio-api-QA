@@ -8,6 +8,10 @@ cypress/videos/
 cypress/screenshots/
 cypress/downloads/
 
+# Allure
+allure-results/
+allure-report/
+
 # Logs
 *.log
 npm-debug.log*

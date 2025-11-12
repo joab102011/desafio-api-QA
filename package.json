@@ -7,7 +7,10 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
-    "test:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'"
+    "test:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report",
+    "allure:serve": "allure serve allure-results"
   },
   "keywords": [
     "cypress",
@@ -18,7 +21,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "cypress": "^13.6.0"
+    "cypress": "^13.6.0",
+    "@shelex/cypress-allure-plugin": "^2.40.2",
+    "allure-commandline": "^2.24.1"
   }
 }
 

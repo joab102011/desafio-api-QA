@@ -36,6 +36,7 @@ Este projeto foi desenvolvido como parte de um desafio técnico para automação
 - **JavaScript** - Linguagem de programação
 - **Node.js** - Ambiente de execução
 - **GitHub Actions** - CI/CD e automação de workflows
+- **Allure Reports** - Geração de relatórios HTML detalhados
 
 ## 📁 Estrutura do Projeto
 
@@ -296,6 +297,21 @@ npx cypress run --spec "cypress/e2e/api/performance.cy.js"
 npx cypress run --spec "cypress/e2e/api/seguranca.cy.js"
 ```
 
+### Gerar e Visualizar Relatório Allure
+
+Após executar os testes, você pode gerar e visualizar o relatório Allure:
+
+```bash
+# Gerar relatório Allure
+npm run allure:generate
+
+# Abrir relatório no navegador
+npm run allure:open
+
+# Ou servir relatório diretamente (sem gerar arquivo)
+npm run allure:serve
+```
+
 ## ⚙️ Configuração do Cypress
 
 O projeto está configurado para testes de API com as seguintes configurações:
@@ -380,9 +396,16 @@ Após a execução dos testes, você encontrará:
 
 Os testes executados via GitHub Actions geram automaticamente:
 
+- ✅ **Relatório Allure** - Relatório HTML completo com gráficos e estatísticas
 - ✅ Artifacts com screenshots em caso de falha
 - ✅ Status de execução visível no PR
 - ✅ Logs detalhados de execução
+
+**Para visualizar o relatório Allure:**
+1. Acesse a aba "Actions" no GitHub
+2. Selecione a execução do workflow
+3. Baixe o artifact "allure-report"
+4. Extraia e abra o arquivo `index.html` no navegador
 
 ## 🔄 CI/CD - GitHub Actions
 
