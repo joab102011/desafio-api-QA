@@ -1,0 +1,60 @@
+name: Cypress Tests - CI/CD
+
+# Este workflow executa os testes automatizados do Cypress
+# APENAS quando executado manualmente via GitHub Actions
+# 
+# Estratégia de CI/CD:
+# - Execução manual permite controle sobre quando rodar testes (economia de recursos)
+# - Testes locais são executados antes do push (npm run cy:run)
+# - Workflow manual disponível para validações específicas e prioridades do sistema
+# - Navegador padrão do Cypress (Electron) é suficiente para validação
+# - Upload de artifacts facilita debug de falhas
+# - Retry automático reduz flaky tests (testa e retesta várias vezes)
+
+on:
+  workflow_dispatch: # Execução manual apenas - permite controle sobre quando rodar testes
+
+jobs:
+  # Job para executar testes Cypress
+  cypress-run:
+    name: Cypress Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      
+      - name: Instalar dependências
+        run: npm ci
+      
+      - name: Executar testes Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          record: false
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload screenshots em caso de falha
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
+      
+      - name: Upload vídeos dos testes
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          retention-days: 7
+
