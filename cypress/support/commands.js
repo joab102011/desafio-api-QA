@@ -7,6 +7,19 @@
 // ***********************************************************
 
 /**
+ * Comando customizado para criar steps BDD (Behavior-Driven Development)
+ * Segue o padrão Given-When-Then (Dado-Quando-Então)
+ * @param {string} message - Mensagem descritiva do step BDD
+ * @returns {Cypress.Chainable} - Retorna o próprio Cypress para encadeamento
+ */
+Cypress.Commands.add('step', (message) => {
+  // Loga o step no console do Cypress para melhor rastreabilidade
+  cy.log(`STEP: ${message}`)
+  // Retorna o próprio Cypress para permitir encadeamento
+  return cy.wrap(null)
+})
+
+/**
  * Comando customizado para realizar login na API
  * @param {string} email - Email do usuário
  * @param {string} password - Senha do usuário

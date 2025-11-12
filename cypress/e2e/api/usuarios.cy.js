@@ -51,15 +51,18 @@ describe('API - Usuários', () => {
    * Criticidade: ALTA - Cadastro de usuários é funcionalidade essencial
    */
   it('Deve criar usuário com dados válidos', () => {
-    // Gera dados válidos de usuário
+    cy.step('Dado que tenho dados válidos de usuário')
     dadosUsuario = Cypress.helpers.gerarDadosUsuario()
     
+    cy.step('Quando envio requisição para criar usuário')
     cy.criarUsuario(dadosUsuario).then((response) => {
-      // Valida status da resposta
+      cy.step('Então o sistema deve retornar status 201')
       cy.validarRespostaSucesso(response, 201)
       
-      // Valida estrutura da resposta
+      cy.step('E a resposta deve conter mensagem de sucesso')
       expect(response.body).to.have.property('message', 'Cadastro realizado com sucesso')
+      
+      cy.step('E a resposta deve conter ID do usuário criado')
       expect(response.body).to.have.property('_id')
       
       // Armazena o ID do usuário criado para uso em outros testes
@@ -78,19 +81,19 @@ describe('API - Usuários', () => {
    * Criticidade: ALTA - Consulta de dados é funcionalidade essencial
    */
   it('Deve buscar usuário por ID com sucesso', () => {
-    // Primeiro cria um usuário para buscar
+    cy.step('Dado que tenho um usuário cadastrado no sistema')
     dadosUsuario = Cypress.helpers.gerarDadosUsuario()
     
     cy.criarUsuario(dadosUsuario).then((createResponse) => {
       expect(createResponse.status).to.eq(201)
       userId = createResponse.body._id
       
-      // Agora busca o usuário criado
+      cy.step('Quando busco o usuário pelo ID')
       cy.buscarUsuario(userId).then((response) => {
-        // Valida status da resposta
+        cy.step('Então o sistema deve retornar status 200')
         cy.validarRespostaSucesso(response, 200)
         
-        // Valida que os dados retornados são os mesmos enviados
+        cy.step('E os dados retornados devem corresponder aos dados cadastrados')
         expect(response.body).to.have.property('nome', dadosUsuario.nome)
         expect(response.body).to.have.property('email', dadosUsuario.email)
         expect(response.body).to.have.property('administrador', dadosUsuario.administrador)
@@ -105,20 +108,21 @@ describe('API - Usuários', () => {
    * Objetivo: Validar que o sistema não permite cadastro de emails duplicados
    */
   it('Deve rejeitar criação de usuário com email duplicado', () => {
-    // Cria primeiro usuário
+    cy.step('Dado que já existe um usuário cadastrado com um email')
     dadosUsuario = Cypress.helpers.gerarDadosUsuario()
     
     cy.criarUsuario(dadosUsuario).then((firstResponse) => {
       expect(firstResponse.status).to.eq(201)
       
-      // Tenta criar outro usuário com o mesmo email
+      cy.step('Quando tento criar outro usuário com o mesmo email')
       cy.criarUsuario({
         nome: 'Outro Nome',
         email: dadosUsuario.email, // Mesmo email
         password: 'outrasenha',
         administrador: 'false'
       }).then((secondResponse) => {
-        // Valida que a segunda criação foi rejeitada
+        cy.step('Então o sistema deve retornar erro 400')
+        cy.step('E a mensagem deve indicar que o email já está em uso')
         cy.validarRespostaErro(secondResponse, 400, 'Este email já está sendo usado')
       })
     })
@@ -130,30 +134,35 @@ describe('API - Usuários', () => {
    * Objetivo: Validar que o sistema valida campos obrigatórios
    */
   it('Deve rejeitar criação de usuário sem campos obrigatórios', () => {
-    // Testa sem nome
+    cy.step('Dado que não preencho os campos obrigatórios')
+    
+    cy.step('Quando tento criar usuário sem nome')
     cy.criarUsuario({
       email: Cypress.helpers.gerarEmailAleatorio(),
       password: 'senha123',
       administrador: 'true'
     }).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
 
-    // Testa sem email
+    cy.step('Quando tento criar usuário sem email')
     cy.criarUsuario({
       nome: 'Teste',
       password: 'senha123',
       administrador: 'true'
     }).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
 
-    // Testa sem senha
+    cy.step('Quando tento criar usuário sem senha')
     cy.criarUsuario({
       nome: 'Teste',
       email: Cypress.helpers.gerarEmailAleatorio(),
       administrador: 'true'
     }).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
   })
@@ -164,9 +173,13 @@ describe('API - Usuários', () => {
    * Objetivo: Validar tratamento de erro para usuário não encontrado
    */
   it('Deve retornar erro ao buscar usuário inexistente', () => {
+    cy.step('Dado que tenho um ID de usuário inexistente')
     const idInexistente = '000000000000000000000000' // ID inválido
     
+    cy.step('Quando busco o usuário por esse ID')
     cy.buscarUsuario(idInexistente).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
+      cy.step('E a mensagem deve indicar que o usuário não foi encontrado')
       cy.validarRespostaErro(response, 400, 'Usuário não encontrado')
     })
   })
@@ -177,11 +190,14 @@ describe('API - Usuários', () => {
    * Objetivo: Validar que o sistema retorna lista de usuários
    */
   it('Deve listar todos os usuários', () => {
+    cy.step('Dado que existem usuários cadastrados no sistema')
+    
+    cy.step('Quando solicito a listagem de todos os usuários')
     cy.listarUsuarios().then((response) => {
-      // Valida status da resposta
+      cy.step('Então o sistema deve retornar status 200')
       cy.validarRespostaSucesso(response, 200)
       
-      // Valida estrutura da resposta
+      cy.step('E a resposta deve conter lista de usuários')
       expect(response.body).to.have.property('quantidade')
       expect(response.body).to.have.property('usuarios')
       expect(response.body.usuarios).to.be.an('array')

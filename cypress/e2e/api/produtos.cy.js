@@ -56,6 +56,8 @@ describe('API - Produtos', () => {
    * Criticidade: ALTA - Cadastro de produtos é funcionalidade essencial do e-commerce
    */
   it('Deve criar produto com dados válidos e usuário autenticado', () => {
+    cy.step('Dado que tenho dados válidos de produto')
+    cy.step('E estou autenticado no sistema')
     // Gera dados válidos de produto com nome único
     const timestamp = Date.now()
     const baseProduto = Cypress.helpers.gerarDadosProduto()
@@ -64,12 +66,15 @@ describe('API - Produtos', () => {
       nome: `${baseProduto.nome} ${timestamp}`
     }
     
+    cy.step('Quando envio requisição para criar produto')
     cy.criarProduto(dadosProduto, token).then((response) => {
-      // Valida status da resposta
+      cy.step('Então o sistema deve retornar status 201')
       cy.validarRespostaSucesso(response, 201)
       
-      // Valida estrutura da resposta
+      cy.step('E a resposta deve conter mensagem de sucesso')
       expect(response.body).to.have.property('message', 'Cadastro realizado com sucesso')
+      
+      cy.step('E a resposta deve conter ID do produto criado')
       expect(response.body).to.have.property('_id')
       
       // Armazena o ID do produto criado
@@ -77,7 +82,7 @@ describe('API - Produtos', () => {
       expect(productId).to.be.a('string')
       expect(productId.length).to.be.greaterThan(0)
       
-      // Busca o produto criado para validar os dados completos
+      cy.step('E ao buscar o produto criado, os dados devem estar corretos')
       cy.buscarProduto(productId).then((getResponse) => {
         expect(getResponse.status).to.eq(200)
         expect(getResponse.body).to.have.property('nome', dadosProduto.nome)
@@ -97,6 +102,7 @@ describe('API - Produtos', () => {
    * Criticidade: ALTA - Consulta de produtos é essencial para o e-commerce
    */
   it('Deve buscar produto por ID com sucesso', () => {
+    cy.step('Dado que tenho um produto cadastrado no sistema')
     // Primeiro cria um produto para buscar com nome único
     const timestamp = Date.now()
     const randomSuffix = Math.floor(Math.random() * 10000)
@@ -113,6 +119,7 @@ describe('API - Produtos', () => {
       // Verifica se o produto foi criado
       // Se falhou por duplicação, busca um produto existente para usar no teste
       if (createResponse.status === 400) {
+        cy.step('E se o produto não pôde ser criado, uso um produto existente')
         // Se falhou, busca um produto existente para validar a busca
         return cy.listarProdutos().then((listResponse) => {
           if (listResponse.body.produtos && listResponse.body.produtos.length > 0) {
@@ -134,13 +141,14 @@ describe('API - Produtos', () => {
       expect(productId).to.be.a('string')
       expect(productId.length).to.be.greaterThan(0)
       
+      cy.step('Quando busco o produto pelo ID')
       // Aguarda um pouco e busca o produto
       cy.wait(500)
       cy.buscarProduto(productId).then((response) => {
-        // Valida status da resposta
+        cy.step('Então o sistema deve retornar status 200')
         cy.validarRespostaSucesso(response, 200)
         
-        // Valida estrutura básica
+        cy.step('E a resposta deve conter os dados do produto')
         expect(response.body).to.have.property('nome')
         expect(response.body).to.have.property('preco')
         expect(response.body).to.have.property('descricao')
@@ -149,6 +157,7 @@ describe('API - Produtos', () => {
         
         // Se for o produto que criamos (não é existente), valida os dados específicos
         if (!result.useExisting && response.body.nome === dadosProduto.nome) {
+          cy.step('E os dados devem corresponder aos dados cadastrados')
           expect(response.body).to.have.property('nome', dadosProduto.nome)
           expect(response.body).to.have.property('preco', dadosProduto.preco)
           expect(response.body).to.have.property('descricao', dadosProduto.descricao)
@@ -164,15 +173,19 @@ describe('API - Produtos', () => {
    * Objetivo: Validar que apenas usuários autenticados podem criar produtos
    */
   it('Deve rejeitar criação de produto sem autenticação', () => {
+    cy.step('Dado que tenho dados válidos de produto')
+    cy.step('E não estou autenticado no sistema')
     dadosProduto = Cypress.helpers.gerarDadosProduto()
     
-    // Tenta criar produto sem token
+    cy.step('Quando tento criar produto sem token de autenticação')
     cy.request({
       method: 'POST',
       url: '/produtos',
       body: dadosProduto,
       failOnStatusCode: false
     }).then((response) => {
+      cy.step('Então o sistema deve retornar erro 401')
+      cy.step('E a mensagem deve indicar que o token está ausente')
       cy.validarRespostaErro(response, 401, 'Token de acesso ausente, inválido, expirado ou usuário do token não existe mais')
     })
   })
@@ -183,39 +196,45 @@ describe('API - Produtos', () => {
    * Objetivo: Validar que o sistema valida campos obrigatórios
    */
   it('Deve rejeitar criação de produto sem campos obrigatórios', () => {
-    // Testa sem nome
+    cy.step('Dado que não preencho os campos obrigatórios')
+    
+    cy.step('Quando tento criar produto sem nome')
     cy.criarProduto({
       preco: 100,
       descricao: 'Produto sem nome',
       quantidade: 10
     }, token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
 
-    // Testa sem preço
+    cy.step('Quando tento criar produto sem preço')
     cy.criarProduto({
       nome: 'Produto sem preço',
       descricao: 'Produto sem preço',
       quantidade: 10
     }, token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
 
-    // Testa sem descrição
+    cy.step('Quando tento criar produto sem descrição')
     cy.criarProduto({
       nome: 'Produto sem descrição',
       preco: 100,
       quantidade: 10
     }, token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
 
-    // Testa sem quantidade
+    cy.step('Quando tento criar produto sem quantidade')
     cy.criarProduto({
       nome: 'Produto sem quantidade',
       preco: 100,
       descricao: 'Produto sem quantidade'
     }, token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
   })
@@ -226,6 +245,7 @@ describe('API - Produtos', () => {
    * Objetivo: Validar atualização de dados de produto
    */
   it('Deve atualizar produto existente com sucesso', () => {
+    cy.step('Dado que tenho um produto cadastrado no sistema')
     // Cria um produto primeiro com nome único
     const timestamp = Date.now()
     dadosProduto = Cypress.helpers.gerarDadosProduto({
@@ -239,6 +259,7 @@ describe('API - Produtos', () => {
       expect(createResponse.status).to.eq(201)
       productId = createResponse.body._id
       
+      cy.step('Quando envio requisição para atualizar o produto')
       // Atualiza o produto com nome único também
       const dadosAtualizados = {
         nome: `Produto Atualizado ${timestamp}`,
@@ -248,7 +269,9 @@ describe('API - Produtos', () => {
       }
       
       cy.atualizarProduto(productId, dadosAtualizados, token).then((response) => {
+        cy.step('Então o sistema deve retornar status 200')
         cy.validarRespostaSucesso(response, 200)
+        cy.step('E a resposta deve conter mensagem de sucesso')
         expect(response.body).to.have.property('message', 'Registro alterado com sucesso')
       })
     })
@@ -260,11 +283,14 @@ describe('API - Produtos', () => {
    * Objetivo: Validar que o sistema retorna lista de produtos
    */
   it('Deve listar todos os produtos', () => {
+    cy.step('Dado que existem produtos cadastrados no sistema')
+    
+    cy.step('Quando solicito a listagem de todos os produtos')
     cy.listarProdutos().then((response) => {
-      // Valida status da resposta
+      cy.step('Então o sistema deve retornar status 200')
       cy.validarRespostaSucesso(response, 200)
       
-      // Valida estrutura da resposta
+      cy.step('E a resposta deve conter lista de produtos')
       expect(response.body).to.have.property('quantidade')
       expect(response.body).to.have.property('produtos')
       expect(response.body.produtos).to.be.an('array')
@@ -278,9 +304,13 @@ describe('API - Produtos', () => {
    * Objetivo: Validar tratamento de erro para produto não encontrado
    */
   it('Deve retornar erro ao buscar produto inexistente', () => {
+    cy.step('Dado que tenho um ID de produto inexistente')
     const idInexistente = '000000000000000000000000' // ID inválido
     
+    cy.step('Quando busco o produto por esse ID')
     cy.buscarProduto(idInexistente).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
+      cy.step('E a mensagem deve indicar que o produto não foi encontrado')
       cy.validarRespostaErro(response, 400, 'Produto não encontrado')
     })
   })

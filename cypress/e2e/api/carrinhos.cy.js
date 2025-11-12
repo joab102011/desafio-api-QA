@@ -81,9 +81,17 @@ describe('API - Carrinhos', () => {
    * Criticidade: ALTA - Carrinho de compras é funcionalidade essencial do e-commerce
    */
   it('Deve criar carrinho com produtos válidos e usuário autenticado', () => {
+    cy.step('Dado que tenho produtos cadastrados no sistema')
+    cy.step('E estou autenticado no sistema')
     // Aguarda um pouco para garantir que os produtos foram criados
     cy.wait(1000)
     
+    cy.step('E não tenho carrinho ativo')
+    // Primeiro cancela qualquer carrinho existente
+    cy.cancelarCompra(token)
+    cy.wait(1000)
+    
+    cy.step('Quando envio requisição para criar carrinho com produtos válidos')
     // Cria carrinho com produtos
     const produtos = [
       {
@@ -96,16 +104,14 @@ describe('API - Carrinhos', () => {
       }
     ]
     
-    // Primeiro cancela qualquer carrinho existente
-    cy.cancelarCompra(token)
-    cy.wait(1000)
-    
     cy.criarCarrinho(produtos, token).then((response) => {
       // Valida status da resposta (pode ser 200, 201 ou 400 se já existe)
       if (response.status === 400 && response.body && response.body.message && response.body.message.includes('carrinho')) {
+        cy.step('E se já existe carrinho, busco o carrinho existente')
         // Se já existe carrinho, busca o existente
         return cy.listarCarrinhos(token)
       } else if (response.status === 200 || response.status === 201) {
+        cy.step('Então o sistema deve retornar status 200 ou 201')
         // Se criado com sucesso, valida mensagem
         if (response.status === 201) {
           expect(response.body).to.have.property('message', 'Cadastro realizado com sucesso')
@@ -133,6 +139,7 @@ describe('API - Carrinhos', () => {
       expect(cartId).to.be.a('string')
       expect(cartId.length).to.be.greaterThan(0)
       
+      cy.step('E ao buscar o carrinho criado, deve conter os produtos')
       // Busca o carrinho criado para validar os dados completos
       cy.wait(500)
       cy.buscarCarrinho(cartId, token).then((getResponse) => {
@@ -153,6 +160,7 @@ describe('API - Carrinhos', () => {
    * Criticidade: ALTA - Consulta de carrinho é essencial para o e-commerce
    */
   it('Deve buscar carrinho por ID com sucesso', () => {
+    cy.step('Dado que tenho um carrinho cadastrado no sistema')
     // Primeiro cancela qualquer carrinho existente
     cy.cancelarCompra(token)
     cy.wait(1000)
@@ -169,6 +177,7 @@ describe('API - Carrinhos', () => {
       if (createResponse.status === 201) {
         cartId = createResponse.body._id
       } else if (createResponse.status === 400 && createResponse.body && createResponse.body.message && createResponse.body.message.includes('carrinho')) {
+        cy.step('E se já existe carrinho, busco o carrinho existente')
         // Se já existe carrinho, busca o carrinho existente
         return cy.listarCarrinhos(token)
       } else if (createResponse.status === 200) {
@@ -185,20 +194,21 @@ describe('API - Carrinhos', () => {
         cartId = listResponse.body.carrinhos[0]._id
       }
       
+      cy.step('Quando busco o carrinho pelo ID')
       // Aguarda um pouco e busca o carrinho
       cy.wait(500)
       if (cartId) {
         cy.buscarCarrinho(cartId, token).then((response) => {
-          // Valida status da resposta
+          cy.step('Então o sistema deve retornar status 200')
           cy.validarRespostaSucesso(response, 200)
           
-          // Valida estrutura da resposta
+          cy.step('E a resposta deve conter os dados do carrinho')
           expect(response.body).to.have.property('produtos')
           expect(response.body).to.have.property('precoTotal')
           expect(response.body).to.have.property('quantidadeTotal')
           expect(response.body).to.have.property('_id', cartId)
           
-          // Valida que os produtos estão no carrinho
+          cy.step('E o carrinho deve conter produtos')
           expect(response.body.produtos).to.be.an('array')
           expect(response.body.produtos.length).to.be.greaterThan(0)
         })
@@ -212,6 +222,8 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar que apenas usuários autenticados podem criar carrinhos
    */
   it('Deve rejeitar criação de carrinho sem autenticação', () => {
+    cy.step('Dado que tenho produtos válidos')
+    cy.step('E não estou autenticado no sistema')
     cy.wait(1000)
     
     const produtos = [
@@ -221,13 +233,15 @@ describe('API - Carrinhos', () => {
       }
     ]
     
-    // Tenta criar carrinho sem token
+    cy.step('Quando tento criar carrinho sem token de autenticação')
     cy.request({
       method: 'POST',
       url: '/carrinhos',
       body: { produtos: produtos },
       failOnStatusCode: false
     }).then((response) => {
+      cy.step('Então o sistema deve retornar erro 401')
+      cy.step('E a mensagem deve indicar que o token está ausente')
       cy.validarRespostaErro(response, 401, 'Token de acesso ausente')
     })
   })
@@ -238,6 +252,8 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar tratamento de erro para produto não encontrado
    */
   it('Deve rejeitar criação de carrinho com produto inexistente', () => {
+    cy.step('Dado que tenho um ID de produto inexistente')
+    cy.step('E estou autenticado no sistema')
     // Primeiro cancela qualquer carrinho existente
     cy.cancelarCompra(token)
     cy.wait(1000)
@@ -249,10 +265,13 @@ describe('API - Carrinhos', () => {
       }
     ]
     
+    cy.step('Quando tento criar carrinho com produto inexistente')
     cy.criarCarrinho(produtos, token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400 ou 404')
       // A API pode retornar erro de produto não encontrado ou outro erro
       expect(response.status).to.be.oneOf([400, 404])
       if (response.body && response.body.message) {
+        cy.step('E a mensagem deve indicar que o produto não foi encontrado')
         expect(response.body.message).to.satisfy((msg) => 
           msg.includes('Produto não encontrado') || 
           msg.includes('não encontrado') ||
@@ -268,10 +287,13 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar que carrinho precisa ter pelo menos um produto
    */
   it('Deve rejeitar criação de carrinho sem produtos', () => {
+    cy.step('Dado que estou autenticado no sistema')
+    cy.step('E não tenho produtos para adicionar ao carrinho')
     cy.wait(1000)
     
-    // Tenta criar carrinho vazio
+    cy.step('Quando tento criar carrinho sem produtos')
     cy.criarCarrinho([], token).then((response) => {
+      cy.step('Então o sistema deve retornar erro 400')
       cy.validarRespostaErro(response, 400)
     })
   })
@@ -282,13 +304,15 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar que o sistema retorna lista de carrinhos do usuário autenticado
    */
   it('Deve listar carrinhos do usuário autenticado', () => {
+    cy.step('Dado que estou autenticado no sistema')
     cy.wait(1000)
     
+    cy.step('Quando solicito a listagem de carrinhos')
     cy.listarCarrinhos(token).then((response) => {
-      // Valida status da resposta
+      cy.step('Então o sistema deve retornar status 200')
       cy.validarRespostaSucesso(response, 200)
       
-      // Valida estrutura da resposta
+      cy.step('E a resposta deve conter lista de carrinhos')
       expect(response.body).to.have.property('quantidade')
       expect(response.body).to.have.property('carrinhos')
       expect(response.body.carrinhos).to.be.an('array')
@@ -301,6 +325,8 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar finalização de compra
    */
   it('Deve concluir compra com sucesso', () => {
+    cy.step('Dado que tenho um carrinho com produtos')
+    cy.step('E estou autenticado no sistema')
     // Primeiro cancela qualquer carrinho existente
     cy.cancelarCompra(token)
     cy.wait(1000)
@@ -316,15 +342,21 @@ describe('API - Carrinhos', () => {
     cy.criarCarrinho(produtos, token).then((createResponse) => {
       // Verifica se o carrinho foi criado
       if (createResponse.status === 201 || createResponse.status === 200) {
+        cy.step('Quando solicito a conclusão da compra')
         // Conclui a compra
         cy.concluirCompra(token).then((response) => {
+          cy.step('Então o sistema deve retornar status 200')
           cy.validarRespostaSucesso(response, 200)
+          cy.step('E a resposta deve conter mensagem de sucesso')
           expect(response.body).to.have.property('message')
         })
       } else {
+        cy.step('E se já existe carrinho, solicito a conclusão da compra')
         // Se já existe carrinho, tenta concluir mesmo assim
         cy.concluirCompra(token).then((response) => {
+          cy.step('Então o sistema deve retornar status 200')
           cy.validarRespostaSucesso(response, 200)
+          cy.step('E a resposta deve conter mensagem de sucesso')
           expect(response.body).to.have.property('message')
         })
       }
@@ -337,6 +369,8 @@ describe('API - Carrinhos', () => {
    * Objetivo: Validar cancelamento de compra
    */
   it('Deve cancelar compra com sucesso', () => {
+    cy.step('Dado que tenho um carrinho com produtos')
+    cy.step('E estou autenticado no sistema')
     // Primeiro cancela qualquer carrinho existente para garantir estado limpo
     cy.cancelarCompra(token)
     cy.wait(1000)
@@ -350,12 +384,15 @@ describe('API - Carrinhos', () => {
     ]
     
     cy.criarCarrinho(produtos, token).then((createResponse) => {
+      cy.step('Quando solicito o cancelamento da compra')
       // Cancela a compra independente do status
       return cy.cancelarCompra(token)
     }).then((response) => {
       // Valida que a resposta foi bem-sucedida
       // Pode retornar sucesso ou erro se não houver carrinho
       if (response.status === 200) {
+        cy.step('Então o sistema deve retornar status 200')
+        cy.step('E a resposta deve conter mensagem de sucesso ou não encontrado')
         expect(response.body).to.have.property('message')
         // Aceita tanto a mensagem de sucesso quanto a de não encontrado
         expect(response.body.message).to.satisfy((msg) => 
