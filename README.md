@@ -299,10 +299,14 @@ npx cypress run --spec "cypress/e2e/api/seguranca.cy.js"
 
 ### Gerar e Visualizar Relatório Allure
 
-Após executar os testes, você pode gerar e visualizar o relatório Allure:
+Os scripts de teste já estão configurados para gerar os resultados do Allure automaticamente. Após executar os testes:
 
 ```bash
-# Gerar relatório Allure
+# Opção 1: Executar testes e gerar relatório em um comando
+npm run test:api:allure
+
+# Opção 2: Executar testes e depois gerar relatório separadamente
+npm run test:api
 npm run allure:generate
 
 # Abrir relatório no navegador
@@ -311,6 +315,8 @@ npm run allure:open
 # Ou servir relatório diretamente (sem gerar arquivo)
 npm run allure:serve
 ```
+
+**Nota:** Os scripts `cy:run`, `cy:run:headed` e `test:api` já incluem a flag `--env allure=true` para habilitar a geração de resultados do Allure automaticamente.
 
 ## ⚙️ Configuração do Cypress
 

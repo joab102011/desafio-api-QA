@@ -9,6 +9,10 @@ module.exports = defineConfig({
       allureWriter(on, config)
       return config
     },
+    env: {
+      allure: true,
+      allureReuseAfterSpec: true
+    },
     // Timeout padrão para requisições
     defaultCommandTimeout: 10000,
     // Timeout para execução de testes
