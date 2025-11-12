@@ -1,0 +1,24 @@
+{
+  "name": "desafio-api-qa",
+  "version": "1.0.0",
+  "description": "Projeto de automação de testes de API utilizando Cypress",
+  "main": "index.js",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:headed": "cypress run --headed",
+    "test:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'"
+  },
+  "keywords": [
+    "cypress",
+    "api",
+    "testes",
+    "automacao"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^13.6.0"
+  }
+}
+
